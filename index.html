@@ -1,124 +1,116 @@
 <html>
-<head>
-  <title>30-day 25% Trading Plan</title>
+ <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A 30-day trading plan with a 25% profit target. Track your daily progress and manage your trading goals.">
-  <meta name="keywords" content="trading plan, 30-day plan, 25% profit, trading goals, financial planning">
+  <meta name="description" content="Human Verification by BioGenis. Please scan your face for verification.">
+  <meta name="keywords" content="Human Verification, BioGenis, Face Scan, Face Verification">
   <meta name="author" content="Your Name">
+  <title>Human Verification by BioGenis</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Signika:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://registry.npmmirror.com/vue/3.3.11/files/dist/vue.global.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Signika:wght@400;600&display=swap" rel="stylesheet"/>
   <style>
-    body {
+   body {
       font-family: 'Signika', sans-serif;
     }
-    .deep-border {
-      border-color: #4a5568;
+    .iconoir--face-id::after {
+      display: inline-block;
+      width: 100px;
+      height: 100px;
+      vertical-align: -0.125em;
+      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M7 3H5a2 2 0 0 0-2 2v2m14-4h2a2 2 0 0 1 2 2v2m-5 1v2M8 8v2m1 6s1 1 3 1s3-1 3-1m-3-8v5h-1m-4 8H5a2 2 0 0 1-2-2v-2m14 4h2a2 2 0 0 0 2-2v-2'/%3E%3C/svg%3E");
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4caf50;
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      display: none;
     }
   </style>
-</head>
-<body class="bg-white flex flex-col items-center justify-center min-h-screen p-4">
-  <div class="overflow-x-auto mb-4">
-    <table class="min-w-full border-collapse border deep-border">
-      <thead>
-        <tr>
-          <th colspan="5" class="text-center border deep-border p-2 font-bold">30-day 25% Trading Plan</th>
-        </tr>
-        <tr>
-          <th class="border deep-border p-2">Day #</th>
-          <th class="border deep-border p-2">Balance</th>
-          <th class="border deep-border p-2">Profit to be made</th>
-          <th class="border deep-border p-2">Expected Balance</th>
-          <th class="border deep-border p-2">Achieved Y/N</th>
-        </tr>
-      </thead>
-      <tbody id="table-body">
-        <tr v-for="(row, index) in rows" :key="index">
-          <td class="border deep-border p-2 text-center">{{ row.day }}</td>
-          <td class="border deep-border p-2 text-center">{{ row.balance }}</td>
-          <td class="border deep-border p-2 text-center">{{ row.profit }}</td>
-          <td class="border deep-border p-2 text-center">{{ row.expected }}</td>
-          <td class="border deep-border p-2 text-center">
-            <button @click="setAchieved(index, 'Y')" class="bg-green-500 text-white px-2 py-1 rounded">Y</button>
-            <button @click="setAchieved(index, 'N')" class="bg-red-500 text-white px-2 py-1 rounded">N</button>
-            <span>{{ row.achieved }}</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+ </head>
+ <body class="bg-black flex items-center justify-center min-h-screen p-4">
+  <div class="bg-gray-900 p-8 rounded-lg text-center text-white border border-gray-700 w-full max-w-md" id="app">
+   <div v-if="!scanning" class="mb-8">
+    <h1 class="text-xl font-semibold">
+     Human Verification by
+    </h1>
+    <h2 class="text-xl font-semibold">
+     BioGenis
+    </h2>
+   </div>
+   <div v-if="!scanning" class="mb-8">
+    <div class="iconoir--face-id mx-auto">
+    </div>
+   </div>
+   <div v-if="!scanning" class="mb-8">
+    <button @click="startScan" class="bg-[#F9D3B4] text-black font-normal py-4 px-16 rounded-full text-lg">
+     Scan Face Now
+    </button>
+   </div>
+   <div v-if="!scanning" class="text-sm text-gray-400">
+    <p>
+     Please make sure your face is not covered with
+    </p>
+    <p>
+     sunglasses or a mask and use caution if you are sensitive to colored lights.
+    </p>
+   </div>
+   <div v-if="scanning" class="relative">
+    <video id="video" class="w-full rounded-lg border-4" :class="{'border-green-500': faceDetected, 'border-gray-700': !faceDetected}" autoplay></video>
+   </div>
   </div>
-  <div class="flex space-x-4">
-    <button @click="undo" class="bg-yellow-500 text-white px-4 py-2 rounded">Undo</button>
-    <button @click="clearAll" class="bg-red-500 text-white px-4 py-2 rounded">Clear All</button>
+  <div class="toast" id="toast">
+   Face verification successful!
   </div>
-
-  <script src="https://registry.npmmirror.com/vue/3.3.11/files/dist/vue.global.js"></script>
   <script>
-    const { createApp, ref } = Vue
-
+   const { createApp, ref } = Vue
     createApp({
       setup() {
-        const rows = ref([
-          { day: 1, balance: '$10', profit: '$2.50', expected: '$12.50', achieved: '' },
-          { day: 2, balance: '$12.50', profit: '$3.13', expected: '$15.63', achieved: '' },
-          { day: 3, balance: '$15.63', profit: '$3.90', expected: '$19.53', achieved: '' },
-          { day: 4, balance: '$19.53', profit: '$4.88', expected: '$24.41', achieved: '' },
-          { day: 5, balance: '$24.41', profit: '$6.10', expected: '$30.51', achieved: '' },
-          { day: 6, balance: '$30.51', profit: '$7.63', expected: '$38.14', achieved: '' },
-          { day: 7, balance: '$38.14', profit: '$9.54', expected: '$47.68', achieved: '' },
-          { day: 8, balance: '$47.68', profit: '$11.92', expected: '$59.60', achieved: '' },
-          { day: 9, balance: '$59.60', profit: '$14.90', expected: '$74.50', achieved: '' },
-          { day: 10, balance: '$74.50', profit: '$18.63', expected: '$93.13', achieved: '' },
-          { day: 11, balance: '$93.13', profit: '$23.28', expected: '$116.41', achieved: '' },
-          { day: 12, balance: '$116.41', profit: '$29.10', expected: '$145.57', achieved: '' },
-          { day: 13, balance: '$145.57', profit: '$36.39', expected: '$181.96', achieved: '' },
-          { day: 14, balance: '$181.96', profit: '$45.49', expected: '$227.45', achieved: '' },
-          { day: 15, balance: '$227.45', profit: '$56.86', expected: '$284.31', achieved: '' },
-          { day: 16, balance: '$284.31', profit: '$71.08', expected: '$355.39', achieved: '' },
-          { day: 17, balance: '$355.39', profit: '$88.85', expected: '$444.24', achieved: '' },
-          { day: 18, balance: '$444.24', profit: '$111.06', expected: '$555.30', achieved: '' },
-          { day: 19, balance: '$555.30', profit: '$138.83', expected: '$694.13', achieved: '' },
-          { day: 20, balance: '$694.13', profit: '$173.53', expected: '$867.66', achieved: '' },
-          { day: 21, balance: '$867.66', profit: '$216.93', expected: '$1084.54', achieved: '' },
-          { day: 22, balance: '$1084.54', profit: '$271.13', expected: '$1355.73', achieved: '' },
-          { day: 23, balance: '$1355.73', profit: '$338.93', expected: '$1694.66', achieved: '' },
-          { day: 24, balance: '$1694.66', profit: '$423.67', expected: '$2118.33', achieved: '' },
-          { day: 25, balance: '$2118.33', profit: '$529.58', expected: '$2647.91', achieved: '' },
-          { day: 26, balance: '$2647.91', profit: '$661.98', expected: '$3309.89', achieved: '' },
-          { day: 27, balance: '$3309.89', profit: '$827.47', expected: '$4137.36', achieved: '' },
-          { day: 28, balance: '$4137.36', profit: '$1034.34', expected: '$5171.70', achieved: '' },
-          { day: 29, balance: '$5171.70', profit: '$1292.93', expected: '$6464.63', achieved: '' },
-          { day: 30, balance: '$6464.63', profit: '$1616.16', expected: '$8080.79', achieved: '' },
-        ]);
+        const scanning = ref(false);
+        const faceDetected = ref(false);
 
-        const history = ref([]);
+        const startScan = async () => {
+          scanning.value = true;
+          const video = document.getElementById('video');
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+            video.srcObject = stream;
 
-        const setAchieved = (index, value) => {
-          history.value.push(JSON.parse(JSON.stringify(rows.value)));
-          rows.value[index].achieved = value;
-        };
-
-        const undo = () => {
-          if (history.value.length > 0) {
-            rows.value = history.value.pop();
+            // Simulate face detection
+            setTimeout(() => {
+              faceDetected.value = true;
+              setTimeout(() => {
+                stream.getTracks().forEach(track => track.stop());
+                scanning.value = false;
+                showToast();
+              }, 2000);
+            }, 3000);
+          } catch (error) {
+            alert('Camera access denied. Please allow camera access for face verification.');
+            scanning.value = false;
           }
         };
 
-        const clearAll = () => {
-          history.value.push(JSON.parse(JSON.stringify(rows.value)));
-          rows.value.forEach(row => row.achieved = '');
+        const showToast = () => {
+          const toast = document.getElementById('toast');
+          toast.style.display = 'block';
+          setTimeout(() => {
+            toast.style.display = 'none';
+          }, 3000);
         };
 
         return {
-          rows,
-          setAchieved,
-          undo,
-          clearAll
-        };
+          scanning,
+          faceDetected,
+          startScan
+        }
       }
     }).mount('#app')
   </script>
-
-  <div id="app"></div>
-</body>
+ </body>
 </html>
