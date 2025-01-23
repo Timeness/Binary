@@ -52,26 +52,30 @@
     <p>sunglasses or a mask and use caution if you are sensitive to colored lights.</p>
    </div>
    <div v-if="scanning" class="relative">
-    <video id="video" class="w-full rounded-lg border-4" :class="{'border-green-500': faceDetected, 'border-gray-700': !faceDetected}" autoplay></video>
+    <video ref="videoRef" class="w-full rounded-lg border-4" :class="{'border-green-500': faceDetected, 'border-gray-700': !faceDetected}" autoplay></video>
    </div>
   </div>
   <div class="toast" id="toast">Face verification successful!</div>
   <script>
-   document.addEventListener('DOMContentLoaded', () => {
-     const { createApp, ref } = Vue;
-     createApp({
-       setup() {
-         const scanning = ref(false);
-         const faceDetected = ref(false);
+   const { createApp, ref, onMounted } = Vue;
 
-         const startScan = async () => {
-           const video = document.getElementById('video');
-           scanning.value = true;
-           try {
-             const stream = await navigator.mediaDevices.getUserMedia({
-               video: { facingMode: 'user' },
-             });
-             video.srcObject = stream;
+   createApp({
+     setup() {
+       const scanning = ref(false);
+       const faceDetected = ref(false);
+       const videoRef = ref(null);
+
+       const startScan = async () => {
+         scanning.value = true;
+
+         try {
+           const stream = await navigator.mediaDevices.getUserMedia({
+             video: { facingMode: 'user' },
+           });
+
+           if (videoRef.value) {
+             videoRef.value.srcObject = stream;
+
              setTimeout(() => {
                faceDetected.value = true;
                setTimeout(() => {
@@ -80,36 +84,35 @@
                  showToast();
                }, 2000);
              }, 3000);
-           } catch (error) {
-             scanning.value = false;
-             if (error.name === 'NotAllowedError') {
-               alert('Camera access was denied. Please enable camera permissions in your browser settings.');
-             } else if (error.name === 'NotFoundError') {
-               alert('No camera found. Please connect a camera and try again.');
-             } else if (error.name === 'OverconstrainedError') {
-               alert('Your device does not support the required camera configuration.');
-             } else {
-               alert('An error occurred while accessing the camera: ' + error.message);
-             }
+           } else {
+             throw new Error('Video element not found.');
            }
-         };
+         } catch (error) {
+           scanning.value = false;
+           alert('An error occurred while accessing the camera: ' + error.message);
+         }
+       };
 
-         const showToast = () => {
-           const toast = document.getElementById('toast');
-           toast.style.display = 'block';
-           setTimeout(() => {
-             toast.style.display = 'none';
-           }, 3000);
-         };
+       const showToast = () => {
+         const toast = document.getElementById('toast');
+         toast.style.display = 'block';
+         setTimeout(() => {
+           toast.style.display = 'none';
+         }, 3000);
+       };
 
-         return {
-           scanning,
-           faceDetected,
-           startScan,
-         };
-       },
-     }).mount('#app');
-   });
+       onMounted(() => {
+         console.log('Vue app mounted.');
+       });
+
+       return {
+         scanning,
+         faceDetected,
+         startScan,
+         videoRef,
+       };
+     },
+   }).mount('#app');
   </script>
  </body>
 </html>
