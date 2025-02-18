@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Devices</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Nearby Bluetooth Devices</h1>
+    <button onclick="findNearbyDevices()">Scan for Devices</button>
+    <ul id="deviceList"></ul>
+
+    <script>
+        async function findNearbyDevices() {
+            try {
+                const devices = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true
+                });
+
+                const deviceList = document.getElementById('deviceList');
+                deviceList.innerHTML = ''; // Clear previous list
+
+                const listItem = document.createElement('li');
+                listItem.textContent = `Name: ${devices.name || 'Unknown'}, ID: ${devices.id}`;
+                deviceList.appendChild(listItem);
+            } catch (error) {
+                console.error(error);
+                alert("Failed to find devices. Make sure you're using a supported browser and have Bluetooth enabled.");
+            }
+        }
+    </script>
+</body>
+</html>
