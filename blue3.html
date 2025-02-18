@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Bluetooth API Example</title>
+    <link href="https://fonts.googleapis.com/css2?family=Signika:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Signika', sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #deviceInfo {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Web Bluetooth API - Device Interaction</h1>
+
+    <button onclick="scanForDevices()">Scan for Devices</button>
+    <ul id="deviceList"></ul>
+
+    <div id="deviceInfo"></div>
+
+    <script>
+        let connectedDevice = null;
+        let heartRateCharacteristic = null;
+        let motionCharacteristic = null;
+        let batteryLevelCharacteristic = null;
+
+        // Function to scan for nearby Bluetooth devices
+        async function scanForDevices() {
+            try {
+                console.log('Scanning for Bluetooth devices...');
+                const devices = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['heart_rate', 'battery_service', 'motion_sensors'] // Keep all services
+                });
+
+                const deviceList = document.getElementById('deviceList');
+                deviceList.innerHTML = ''; // Clear previous list
+
+                // Create a list item for the found device
+                const listItem = document.createElement('li');
+                listItem.textContent = `Device: ${devices.name || 'Unknown'}, ID: ${devices.id}`;
+                const connectButton = document.createElement('button');
+                connectButton.textContent = 'Connect';
+                connectButton.onclick = () => connectToDevice(devices);
+
+                // Add connect button to the list item
+                listItem.appendChild(connectButton);
+                deviceList.appendChild(listItem);
+
+            } catch (error) {
+                console.error('Error scanning for devices:', error);
+                alert("Failed to find devices. Make sure you're using a supported browser and have Bluetooth enabled.");
+            }
+        }
+
+        // Function to connect to a selected device
+        async function connectToDevice(device) {
+            try {
+                connectedDevice = await device.gatt.connect();
+                document.getElementById('deviceInfo').innerHTML = `<h2>Connected to ${device.name}</h2>`;
+                console.log('Connected to device:', connectedDevice);
+
+                // Interact with the device (check each service)
+                await getHeartRateData();
+                await getMotionSensorData();
+                await getBatteryLevel();
+
+            } catch (error) {
+                console.error('Error connecting to device:', error);
+                alert('Failed to connect to the device.');
+            }
+        }
+
+        // Function to get heart rate data from the device (if supported)
+        async function getHeartRateData() {
+            try {
+                const service = await connectedDevice.gatt.getPrimaryService('heart_rate');
+                heartRateCharacteristic = await service.getCharacteristic('heart_rate_measurement');
+
+                // Listen for notifications on heart rate
+                await heartRateCharacteristic.startNotifications();
+                heartRateCharacteristic.addEventListener('characteristicvaluechanged', handleHeartRateChange);
+
+                console.log('Heart rate monitoring started.');
+            } catch (error) {
+                console.error('Error reading heart rate data:', error);
+                document.getElementById('deviceInfo').innerHTML += `<p>Heart Rate: None</p>`;
+            }
+        }
+
+        // Handle heart rate data change
+        function handleHeartRateChange(event) {
+            const value = event.target.value;
+            const heartRate = value.getUint8(0); // Assuming heart rate is a single byte
+            document.getElementById('deviceInfo').innerHTML += `<p>Heart Rate: ${heartRate} bpm</p>`;
+        }
+
+        // Function to get motion sensor data (if supported)
+        async function getMotionSensorData() {
+            try {
+                const service = await connectedDevice.gatt.getPrimaryService('motion_sensors');
+                motionCharacteristic = await service.getCharacteristic('motion_data');
+
+                // Listen for motion sensor data
+                await motionCharacteristic.startNotifications();
+                motionCharacteristic.addEventListener('characteristicvaluechanged', handleMotionChange);
+                console.log('Motion sensor monitoring started.');
+            } catch (error) {
+                console.error('Error reading motion sensor data:', error);
+                document.getElementById('deviceInfo').innerHTML += `<p>Motion Sensor: None</p>`;
+            }
+        }
+
+        // Handle motion sensor data change
+        function handleMotionChange(event) {
+            const value = event.target.value;
+            const motionDetected = value.getUint8(0); // Assuming 0 means no motion, 1 means motion detected
+            document.getElementById('deviceInfo').innerHTML += `<p>Motion Detected: ${motionDetected ? 'Yes' : 'No'}</p>`;
+        }
+
+        // Function to get battery level (if supported)
+        async function getBatteryLevel() {
+            try {
+                const service = await connectedDevice.gatt.getPrimaryService('battery_service');
+                batteryLevelCharacteristic = await service.getCharacteristic('battery_level');
+                const value = await batteryLevelCharacteristic.readValue();
+                const batteryLevel = value.getUint8(0);
+
+                document.getElementById('deviceInfo').innerHTML += `<p>Battery Level: ${batteryLevel}%</p>`;
+            } catch (error) {
+                console.error('Error reading battery level:', error);
+                document.getElementById('deviceInfo').innerHTML += `<p>Battery Level: None</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
