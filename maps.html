@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Based Location Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+        #my-map {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="my-map"></div>
+
+    <script>
+        // Initialize the map
+        const map = L.map('my-map').setView([0, 0], 2);
+
+        // Add tile layer (Geoapify)
+        L.tileLayer('https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=015a5b97677145008e667939df4e2890', {
+            attribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a> contributors',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Get user's location based on IP
+        async function getIPLocation() {
+            try {
+                const response = await fetch("https://ip-api.com/json/");
+                const data = await response.json();
+                
+                if (data.status === "success") {
+                    const { lat, lon, city, country } = data;
+
+                    // Set map view
+                    map.setView([lat, lon], 12);
+
+                    // Add marker
+                    L.marker([lat, lon]).addTo(map)
+                        .bindPopup(`Location: ${city}, ${country}`).openPopup();
+                } else {
+                    alert("Failed to get location from IP.");
+                }
+            } catch (error) {
+                console.error("Error fetching IP location:", error);
+            }
+        }
+
+        // Call function to get IP location
+        getIPLocation();
+    </script>
+
+</body>
+</html>
