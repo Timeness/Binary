@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Geolocation Map</title>
+    <title>Live Geolocation Satellite Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <style>
@@ -18,10 +18,10 @@
         }
         /* Custom popup styling */
         .custom-popup {
-            font-family: "Signika", sans-serif; /* Custom Font */
+            font-family: "Signika", sans-serif;
             font-size: 16px;
             font-weight: bold;
-            color: #1e88e5; /* Blue text */
+            color: #ffeb3b; /* Yellow text */
             text-align: center;
         }
     </style>
@@ -31,12 +31,12 @@
     <div id="my-map"></div>
 
     <script>
-        // Initialize map
+        // Initialize map with default view
         const map = L.map('my-map').setView([0, 0], 2);
 
-        // Add tile layer (Geoapify)
-        L.tileLayer('https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=015a5b97677145008e667939df4e2890', {
-            attribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a> contributors',
+        // Add Satellite Tile Layer (Geoapify Satellite)
+        L.tileLayer('https://maps.geoapify.com/v1/tile/satellite/{z}/{x}/{y}.png?apiKey=015a5b97677145008e667939df4e2890', {
+            attribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a>',
             maxZoom: 20
         }).addTo(map);
 
@@ -49,7 +49,7 @@
                         const lon = position.coords.longitude;
 
                         // Update map view
-                        map.setView([lat, lon], 14);
+                        map.setView([lat, lon], 16);
 
                         // Add marker with custom popup
                         L.marker([lat, lon]).addTo(map)
