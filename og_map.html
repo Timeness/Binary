@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Current Location</title>
+    <title>Location Details</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        #location { margin-top: 20px; font-size: 18px; }
+        #location { margin-top: 20px; font-size: 18px; white-space: pre-line; text-align: left; display: inline-block; }
     </style>
 </head>
 <body>
 
-    <h2>Current Location</h2>
+    <h2>Your Location Details</h2>
     <button onclick="getLocation()">Get My Location</button>
-    <p id="location">Click the button to fetch your address.</p>
+    <p id="location">Click the button to fetch your location details.</p>
 
     <script>
         function getLocation() {
@@ -33,8 +33,23 @@
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
-                    let address = data.display_name || "Address not found";
-                    document.getElementById("location").innerText = `Your Address: ${address}`;
+                    let address = data.address || {};
+                    let details = `
+Latitude: ${data.lat}
+Longitude: ${data.lon}
+Full Address: ${data.display_name}
+
+📍 Address Breakdown:
+- Road: ${address.road || "N/A"}
+- Neighbourhood: ${address.neighbourhood || "N/A"}
+- City: ${address.city || address.town || address.village || "N/A"}
+- County: ${address.county || "N/A"}
+- State: ${address.state || "N/A"}
+- Country: ${address.country || "N/A"}
+- Postal Code: ${address.postcode || "N/A"}
+                    `;
+
+                    document.getElementById("location").innerText = details;
                 })
                 .catch(error => {
                     document.getElementById("location").innerText = "Error fetching address.";
