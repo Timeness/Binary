@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Finder</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Signika:wght@400;600&display=swap'); /* IG UK alternative */
+        body { font-family: 'Signika', sans-serif; text-align: center; padding: 20px; }
+        #location, #searchResult { margin-top: 20px; font-size: 18px; white-space: pre-line; text-align: left; display: inline-block; }
+        input { padding: 8px; margin: 10px; width: 80%; max-width: 400px; }
+        button { padding: 10px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>Location Finder</h2>
+    
+    <button onclick="getLocation()">Get My Location</button>
+    <p id="location">Click the button to fetch your location details.</p>
+
+    <h3>Search Location</h3>
+    <input type="text" id="searchBox" placeholder="Enter place name (e.g., Taj Mahal)">
+    <button onclick="searchLocation()">Search</button>
+    <p id="searchResult">Search results will appear here.</p>
+
+    <script>
+        let apiKey = "67b81d558b53a670526627fsk995caf"; // Replace with a valid API key
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                document.getElementById("location").innerText = "Geolocation is not supported by this browser.";
+            }
+        }
+
+        function showPosition(position) {
+            let lat = position.coords.latitude;
+            let lon = position.coords.longitude;
+            let apiUrl = `https://geocode.maps.co/reverse?lat=${lat}&lon=${lon}&api_key=${apiKey}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    let address = data.address || {};
+                    let details = `
+Latitude: ${data.lat}
+Longitude: ${data.lon}
+Full Address: ${data.display_name}
+
+📍 Address Breakdown:
+- Road: ${address.road || "N/A"}
+- City: ${address.city || address.town || address.village || "N/A"}
+- State: ${address.state || "N/A"}
+- Country: ${address.country || "N/A"}
+- Postal Code: ${address.postcode || "N/A"}
+                    `;
+                    document.getElementById("location").innerText = details;
+                })
+                .catch(error => {
+                    document.getElementById("location").innerText = "Error fetching address.";
+                });
+        }
+
+        function searchLocation() {
+            let query = document.getElementById("searchBox").value;
+            if (!query) {
+                document.getElementById("searchResult").innerText = "Please enter a location.";
+                return;
+            }
+
+            let apiUrl = `https://geocode.maps.co/search?q=${encodeURIComponent(query)}&api_key=${apiKey}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        document.getElementById("searchResult").innerText = "No results found.";
+                        return;
+                    }
+
+                    let result = data[0];  // First result
+                    let details = `
+Latitude: ${result.lat}
+Longitude: ${result.lon}
+Full Address: ${result.display_name}
+                    `;
+                    document.getElementById("searchResult").innerText = details;
+                })
+                .catch(error => {
+                    document.getElementById("searchResult").innerText = "Error fetching location.";
+                });
+        }
+
+        function showError(error) {
+            let errorMsg = "";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg = "User denied the request for Geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    errorMsg = "The request to get user location timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    errorMsg = "An unknown error occurred.";
+                    break;
+            }
+            document.getElementById("location").innerText = errorMsg;
+        }
+    </script>
+
+</body>
+</html>
